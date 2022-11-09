@@ -1,0 +1,32 @@
+{
+  "name": "parcialcalidad",
+  "version": "1.0.0",
+  "description": "Se requiere realizar una aplicación que lea un archivo plano (CSV) y procesar la  información contenida de acuerdo diversas características y reglas...",
+  "main": "index.js",
+  "scripts": {
+    "start": "node src/app.js",
+    "dev": "nodemon src/app.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/txusdavid27/parcialCalidad.git"
+  },
+  "author": "Jesús Traslaviña",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/txusdavid27/parcialCalidad/issues"
+  },
+  "homepage": "https://github.com/txusdavid27/parcialCalidad#readme",
+  "dependencies": {
+    "body-parser": "^1.20.1",
+    "boostrap": "^2.0.0",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
+    "dotenv": "^16.0.3",
+    "engine": "^1.0.0",
+    "express": "^4.18.2",
+    "express-handlebars": "^6.0.6",
+    "nodemon": "^2.0.20",
+    "pg": "^8.8.0"
+  }
+}
