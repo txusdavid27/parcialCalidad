@@ -6,33 +6,32 @@ const bodyParser = require('body-parser')
 const Pool = require('pg').Pool
 const connectionString = process.env.DATABASE_URL
 const tasksRoutes = require('./routes/tasks.js');
-/**CSV */
-const csv = require('csv-parser')
-const fs = require('fs')
-var parse = require('csv-parse');
-var inputFilePath = "empleados.csv";
-const results = [];
+/**
+ * Console.Log
+ */
+ var fs = require('fs'); var util = require('util');
+ var log_file = fs.createWriteStream(__dirname + '/node.log', {flags : 'w'});
+ var log_stdout = process.stdout;
 
+ console.log = function(d) { //
+    log_file.write(util.format(d) + '\n');
+    log_stdout.write(util.format(d) + '\n');
+   };
+/**CSV */
+var inputFilePath = "empleados.csv";
 /**
  * Modelo
  */
-let empleado = require("./modules/empleado");
-
+var empleado = require("./modules/empleado");
 /**
- * VISTA
+ * VISTAS
  */
 app.set('views', __dirname + '/views')
-app.engine('.hbs',engine({
-  extname: '.hbs'
-}));
+app.engine('.hbs',engine({extname: '.hbs'}));
 app.set('view engine', 'hbs');
-
 let cors = require("cors");
 app.use(cors());
-
 app.use('/', tasksRoutes);
-
-
 /**
  * REST
  */
@@ -42,10 +41,8 @@ app.use(
     extended: true,
   })
 )
-
-
 /**
- * persistencia
+ * SSL 
  */
 const pool = new Pool({
     connectionString,
@@ -63,11 +60,21 @@ const pool = new Pool({
   port: 5432,  
 })*/
 
-let empleados=[]
+function Empleado(id,nombre,apellido,meses,cargo,salario){
+      this.id=id;
+      this.nombre=nombre;
+      this.apellido=apellido;
+      this.meses=meses;
+      this.cargo=cargo;
+      this.salario=salario;
+}
 
+
+let empleados=[]
 const readEmpleados =(request,response) =>{
     var n=0;
     var bandera=true;
+    console.log("Iniciando Lectura...")
     try{
         //processRecipients();
         var fs = require("fs");
@@ -81,13 +88,17 @@ const readEmpleados =(request,response) =>{
             columns = row.split(";"); //SPLIT COLUMNS
             if(flag){
                 try{
-                    var nuevo = empleado;
+                    //var nuevo = require("./modules/empleado");
+                    var nuevo= new Empleado(parseInt(columns[0],10),columns[1],columns[2],parseInt(columns[3],10),columns[4],parseFloat(columns[5]));
+                    //var nuevo = empleado;
+                    /*
                     nuevo.id=parseInt(columns[0],10);
                     nuevo.nombre=columns[1];
                     nuevo.apellido=columns[2];
                     nuevo.meses=parseInt(columns[3],10);
                     nuevo.cargo=columns[4];
                     nuevo.salario=parseFloat(columns[5]);
+                    */
                     if(validar(nuevo)){
                         empleados.push(nuevo);
                         console.log(nuevo);
@@ -105,6 +116,7 @@ const readEmpleados =(request,response) =>{
     if(bandera){
         response.json({ Agregacion: 'Exitosa'})
     }
+    bonificar();
 }
 
 function validar(empleado){
@@ -129,70 +141,79 @@ function validar(empleado){
     return false;   
 }
 
+function bonificar(){
+  var i=0
+  console.log("####################");
+  for(i; i<empleados.length;i++){
+    
+    if((empleados[i].cargo=="D")  && (empleados[i].meses>=18)){
+      empleados[i].salario+=(empleados[i].salario*0.2);
+    }
+    if((empleados[i].cargo=="M") && (empleados[i].meses>=18)){
+      empleados[i].salario+=(empleados[i].salario*0.15);
+    }
+    if((empleados[i].cargo=="N") && (empleados[i].meses>=18)){
+      empleados[i].salario+=(empleados[i].salario*0.10);
+    }
+    if((empleados[i].cargo=="D")  && (empleados[i].meses<18)){
+      empleados[i].salario+=(empleados[i].salario*0.12);
+    }
+    if((empleados[i].cargo=="M")  && (empleados[i].meses<18)){
+      empleados[i].salario+=(empleados[i].salario*0.08);
+    }
+    if((empleados[i].cargo=="N")  && (empleados[i].meses<18)){
+      empleados[i].salario+=(empleados[i].salario*0.04);
+    }
+    
+  
+    console.log(empleados[i]); 
+  }   
+}
+
+
 /**
  * CRUD 
  */
-const getUsuario = (request, response) => {
-  pool.query('SELECT * FROM usuarios ORDER BY id ASC', (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(200).json(results.rows)
-  })
-}
+ const getUsuario = (request, response) => {
+    pool.query('SELECT * FROM usuarios ORDER BY id ASC', (error, results) => {
+      if (error) {
+        throw error
+      }
+      response.status(200).json(results.rows)
+    })
+  }
+  
+  const crearUsuario = (request, response) => {
+    //const { nombre,edad,tipo } = request.body
+    const nombre = request.body.data.nombre
+    const edad = request.body.data.edad
+    const tipo = request.body.data.tipo
+      
+    pool.query('insert into usuarios (nombre,edad,tipo) values ($1, $2, $3)', [nombre,edad,tipo], (error, results) => {
+      if (error) {
+        throw error
+      }
+      response.status(201).json({ UsuarioAgregado: 'Ok' })
+    })
+  }
+  
+  const path = require('path')
+  
+  app.get('/test', function (req, res) {
+    res.json({ Resultado: 'Proyecto COVENANT' })
+  });
+  
+  app.get('/', function (req, res) {
+    res.render('home');
+  });
 
-const crearUsuario = (request, response) => {
-  //const { nombre,edad,tipo } = request.body
-  const nombre = request.body.data.nombre
-  const edad = request.body.data.edad
-  const tipo = request.body.data.tipo
-    
-  pool.query('insert into usuarios (nombre,edad,tipo) values ($1, $2, $3)', [nombre,edad,tipo], (error, results) => {
-    if (error) {
-      throw error
-    }
-    response.status(201).json({ UsuarioAgregado: 'Ok' })
-  })
-}
+  /**
+   * Metodos.
+   */
+   app.get('/usuarios', getUsuario)
+   app.post('/usuarios', crearUsuario)
+   app.get('/empleadosCSV', readEmpleados)
 
-const iniciarSesion = (request, response) => {
-  //const email = request.body.data.nombre
-  //const password = request.body.data.edad
-  pool.query('SELECT * FROM users ORDER BY id ASC', (error, results) => {
-    if (error) {
-      throw error
-    }
-
-    console.log(results.rowCount)
-    //for(var i=0, i<results.rowCount )
-    results.rows.length
-    console.log("lOGEADO")
-    response.status(200)
-    response.render('datos')
-    //response.status(200).json(results.rows)
-  })
-}
-
-const path = require('path')
-
-app.get('/test', function (req, res) {
-  res.json({ Resultado: 'Proyecto COVENANT' })
-});
-
-app.get('/', function (req, res) {
-  res.render('home');
-  //res.sendFile(path.resolve(__dirname,'index.html'))
-  //res.sendFile(path.resolve(__dirname,'estilos/body.css'))
-  //res.json({ Resultado: 'Taller Despliegue con ' })
-});
-
-/**
- * Metodos.
- */
-app.get('/usuarios', getUsuario)
-app.post('/usuarios', crearUsuario)
-app.post('/login', iniciarSesion)
-app.get('/empleadosCSV', readEmpleados)
 
 /**
  * Run.

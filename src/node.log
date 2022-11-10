@@ -1,0 +1,67 @@
+El servidor está inicializado en http://localhost:%d
+Iniciando Lectura...
+Empleado {
+  id: 10,
+  nombre: 'Carlos',
+  apellido: 'Zapata',
+  meses: 9,
+  cargo: 'D',
+  salario: 12500000
+}
+Empleado {
+  id: 11,
+  nombre: 'Javier',
+  apellido: 'Martinez',
+  meses: 22,
+  cargo: 'M',
+  salario: 6700000
+}
+Empleado {
+  id: 12,
+  nombre: 'Jesus',
+  apellido: 'Traslavina',
+  meses: 12,
+  cargo: 'N',
+  salario: 1200000
+}
+Empleado {
+  id: 13,
+  nombre: 'Andru',
+  apellido: 'Roncancio',
+  meses: 48,
+  cargo: 'D',
+  salario: 50000000
+}
+####################
+Empleado {
+  id: 10,
+  nombre: 'Carlos',
+  apellido: 'Zapata',
+  meses: 9,
+  cargo: 'D',
+  salario: 14000000
+}
+Empleado {
+  id: 11,
+  nombre: 'Javier',
+  apellido: 'Martinez',
+  meses: 22,
+  cargo: 'M',
+  salario: 7705000
+}
+Empleado {
+  id: 12,
+  nombre: 'Jesus',
+  apellido: 'Traslavina',
+  meses: 12,
+  cargo: 'N',
+  salario: 1248000
+}
+Empleado {
+  id: 13,
+  nombre: 'Andru',
+  apellido: 'Roncancio',
+  meses: 48,
+  cargo: 'D',
+  salario: 60000000
+}
