@@ -6,12 +6,17 @@ const bodyParser = require('body-parser')
 const Pool = require('pg').Pool
 const connectionString = process.env.DATABASE_URL
 const tasksRoutes = require('./routes/tasks.js');
+/**CSV */
+const csv = require('csv-parser')
+const fs = require('fs')
+var parse = require('csv-parse');
+var inputFilePath = "empleados.csv";
+const results = [];
 
 /**
  * Modelo
  */
 let empleado = require("./modules/empleado");
-let empleadoObj = new empleado;
 
 /**
  * VISTA
@@ -26,6 +31,7 @@ let cors = require("cors");
 app.use(cors());
 
 app.use('/', tasksRoutes);
+
 
 /**
  * REST
@@ -56,6 +62,72 @@ const pool = new Pool({
   password: '123456',
   port: 5432,  
 })*/
+
+let empleados=[]
+
+const readEmpleados =(request,response) =>{
+    var n=0;
+    var bandera=true;
+    try{
+        //processRecipients();
+        var fs = require("fs");
+        // READ CSV INTO STRING
+        var data = fs.readFileSync(inputFilePath).toLocaleString();
+        // STRING TO ARRAY
+        var rows = data.split("\n"); // SPLIT ROWS
+        var i=0
+        var flag=false;
+        rows.forEach((row) => {
+            columns = row.split(";"); //SPLIT COLUMNS
+            if(flag){
+                try{
+                    var nuevo = empleado;
+                    nuevo.id=parseInt(columns[0],10);
+                    nuevo.nombre=columns[1];
+                    nuevo.apellido=columns[2];
+                    nuevo.meses=parseInt(columns[3],10);
+                    nuevo.cargo=columns[4];
+                    nuevo.salario=parseFloat(columns[5]);
+                    if(validar(nuevo)){
+                        empleados.push(nuevo);
+                        console.log(nuevo);
+                        //insertar en BD.
+                    }
+                }catch(err){console.log("Fallo tipo de dato");}
+            }
+            flag=true;
+        })
+
+    }catch(err){
+        console.log("Fallo al leer CSV");
+        bandera=false;
+    }
+    if(bandera){
+        response.json({ Agregacion: 'Exitosa'})
+    }
+}
+
+function validar(empleado){
+    if(
+        (empleado.id>0 && empleado.id<1000)
+        &&
+        (empleado.meses>=0)
+        &&
+        (
+            empleado.cargo=="D"//directivo.
+            ||
+            empleado.cargo=="M"//Mando medio.
+            ||
+            empleado.cargo=="N"//Empleado.
+        )
+        &&
+        (empleado.salario>0)
+    )
+    {
+        return true;
+    }
+    return false;   
+}
 
 /**
  * CRUD 
@@ -120,6 +192,7 @@ app.get('/', function (req, res) {
 app.get('/usuarios', getUsuario)
 app.post('/usuarios', crearUsuario)
 app.post('/login', iniciarSesion)
+app.get('/empleadosCSV', readEmpleados)
 
 /**
  * Run.
