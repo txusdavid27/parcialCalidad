@@ -7,7 +7,6 @@ class Empleado{
         this.cargo=cargo;
         this.salario=salario;
     }
-
 }
 
 module.exports = new Empleado();

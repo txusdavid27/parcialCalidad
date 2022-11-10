@@ -88,20 +88,17 @@ const readEmpleados =(request,response) =>{
             columns = row.split(";"); //SPLIT COLUMNS
             if(flag){
                 try{
-                    //var nuevo = require("./modules/empleado");
-                    var nuevo= new Empleado(parseInt(columns[0],10),columns[1],columns[2],parseInt(columns[3],10),columns[4],parseFloat(columns[5]));
-                    //var nuevo = empleado;
-                    /*
-                    nuevo.id=parseInt(columns[0],10);
-                    nuevo.nombre=columns[1];
-                    nuevo.apellido=columns[2];
-                    nuevo.meses=parseInt(columns[3],10);
-                    nuevo.cargo=columns[4];
-                    nuevo.salario=parseFloat(columns[5]);
-                    */
+                    var nuevo= new Empleado(parseInt(columns[0],10),
+                    columns[1],
+                    columns[2],
+                    parseInt(columns[3],10),
+                    columns[4],
+                    parseFloat(columns[5]));
+                    //
                     if(validar(nuevo)){
                         empleados.push(nuevo);
                         console.log(nuevo);
+                        insertarEmpleados();
                         //insertar en BD.
                     }
                 }catch(err){console.log("Fallo tipo de dato");}
@@ -163,19 +160,66 @@ function bonificar(){
     }
     if((empleados[i].cargo=="N")  && (empleados[i].meses<18)){
       empleados[i].salario+=(empleados[i].salario*0.04);
-    }
-    
-  
+    }  
     console.log(empleados[i]); 
   }   
 }
 
+function queryinsertarEmpleados(){
+
+  pool.query('insert into empleados (id,nombre,apellido,meses,cargo,salario) values ($1, $2, $3, $4, $5, $6 )',
+          [empleados[i].id,
+          empleados[i].nombre,
+          empleados[i].apellido,
+          empleados[i].meses,
+          empleados[i].cargo,
+          empleados[i].salario
+          ], (error, results) => {
+            if (error) {
+              throw error
+            }
+      })
+
+}
+
+function insertarEmpleados(){
+  var good=true;
+
+  for(var i=0; i<empleados.length; i++){
+
+
+    pool.query('SELECT Id FROM empleados', (error, results) => {
+      if (error) {
+        good=false;
+        throw error
+      }
+
+      for(var j=0; j<results.rows.length; j++){
+        console.log(results.rows[j]);
+        try{
+        if(empleados[i].id == results.rows[j]){
+          console.log(empleados[i].id);
+        }}catch(err){
+          good=false;
+        }
+      }
+      console.log("ID EXISTENTES:");
+      console.log(results.rows);
+    })
+
+    if(good){
+      queryinsertarEmpleados();
+    }
+      /*
+      */
+  }  
+}
 
 /**
  * CRUD 
  */
- const getUsuario = (request, response) => {
-    pool.query('SELECT * FROM usuarios ORDER BY id ASC', (error, results) => {
+ const getEmpleados = (request, response) => {
+    pool.query('SELECT * FROM empleados ORDER BY id ASC', (error, results) => {
       if (error) {
         throw error
       }
@@ -183,13 +227,14 @@ function bonificar(){
     })
   }
   
-  const crearUsuario = (request, response) => {
-    //const { nombre,edad,tipo } = request.body
+  const crearEmpleado = (request, response) => {
+    const { id,nombre,apellido,meses,cargo,salario } = request.body
+    /*
     const nombre = request.body.data.nombre
     const edad = request.body.data.edad
     const tipo = request.body.data.tipo
-      
-    pool.query('insert into usuarios (nombre,edad,tipo) values ($1, $2, $3)', [nombre,edad,tipo], (error, results) => {
+      */
+    pool.query('insert into empleados (id,nombre,apellido,meses,cargo,salario) values ($1, $2, $3, $4, $5, $6 )', [id,nombre,apellido,meses,cargo,salario], (error, results) => {
       if (error) {
         throw error
       }
@@ -200,7 +245,7 @@ function bonificar(){
   const path = require('path')
   
   app.get('/test', function (req, res) {
-    res.json({ Resultado: 'Proyecto COVENANT' })
+    res.json({ Resultado: 'PARCIAL#2_Calidad' })
   });
   
   app.get('/', function (req, res) {
@@ -210,8 +255,8 @@ function bonificar(){
   /**
    * Metodos.
    */
-   app.get('/usuarios', getUsuario)
-   app.post('/usuarios', crearUsuario)
+   app.get('/empleados', getEmpleados)
+   app.post('/empleados', crearEmpleado)
    app.get('/empleadosCSV', readEmpleados)
 
 
