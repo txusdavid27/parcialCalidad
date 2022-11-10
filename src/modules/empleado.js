@@ -3,7 +3,7 @@ class Empleado{
         this.id=id;
         this.nombre=nombre;
         this.apellido=apellido;
-        this.meses=mese;
+        this.meses=meses;
         this.cargo=cargo;
         this.salario=salario;
     }
