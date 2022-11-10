@@ -69,10 +69,18 @@ function Empleado(id,nombre,apellido,meses,cargo,salario){
       this.salario=salario;
 }
 
+var totalRegistros
+var totalProcesados
+var totalDescartados
 
 let empleados=[]
 const readEmpleados =(request,response) =>{
     var n=0;
+    ///
+    totalRegistros=0
+    totalProcesados=0
+    totalDescartados=0
+    ///
     var bandera=true;
     console.log("Iniciando Lectura...")
     try{
@@ -87,6 +95,8 @@ const readEmpleados =(request,response) =>{
         rows.forEach((row) => {
             columns = row.split(";"); //SPLIT COLUMNS
             if(flag){
+              totalRegistros++;
+              console.log("\nFILA: ");
                 try{
                     var nuevo= new Empleado(parseInt(columns[0],10),
                     columns[1],
@@ -96,12 +106,15 @@ const readEmpleados =(request,response) =>{
                     parseFloat(columns[5]));
                     //
                     if(validar(nuevo)){
+                      totalProcesados++;
                         empleados.push(nuevo);
+                        console.log("Agregando nuevo empleado...")
                         console.log(nuevo);
-                        insertarEmpleados();
+                        console.log("Insertando en la Base de Datos PostGres...")
+                        //insertarEmpleados();
                         //insertar en BD.
                     }
-                }catch(err){console.log("Fallo tipo de dato");}
+                }catch(err){console.log("INFO : DESCARTANDO registro del CSV");}
             }
             flag=true;
         })
@@ -111,30 +124,53 @@ const readEmpleados =(request,response) =>{
         bandera=false;
     }
     if(bandera){
-        response.json({ Agregacion: 'Exitosa'})
+        response.render('home');
+        console.log("<<INFO : SE LEE EL ARCHIVO SIN ERRORES>>")
+
     }
+    console.log("INFO : Generando Bonificaciones para Empleados...")
     bonificar();
+    insertarEmpleados();
+    console.log("INFO : Bonificaciones Generadas Exitosamente!")
+
+    totalDescartados=totalRegistros-totalProcesados
+    log_file = fs.createWriteStream(__dirname + '/nodeFinal.log', {flags : 'w'});
+    console.log("Total de registros del archivo :"+totalRegistros)
+    console.log("Total de registros procesados  :"+totalProcesados)
+    console.log("Total de registros descartados :"+totalDescartados)
 }
 
 function validar(empleado){
+  console.log("PROCEDURE: Comenzando la validación de campos")
+  try{
     if(
-        (empleado.id>0 && empleado.id<1000)
-        &&
-        (empleado.meses>=0)
-        &&
-        (
-            empleado.cargo=="D"//directivo.
-            ||
-            empleado.cargo=="M"//Mando medio.
-            ||
-            empleado.cargo=="N"//Empleado.
-        )
-        &&
-        (empleado.salario>0)
-    )
-    {
-        return true;
-    }
+      (empleado.id>0 && empleado.id<1000)
+      &&
+      (empleado.meses>=0)
+      &&
+      (
+          empleado.cargo=="D"//directivo.
+          ||
+          empleado.cargo=="M"//Mando medio.
+          ||
+          empleado.cargo=="N"//Empleado.
+      )
+      &&
+      (empleado.salario>0)
+      &&
+      (isNaN(empleado.nombre))
+      &&
+      (isNaN(empleado.apellido))
+  )
+  {
+    console.log("INFO : Fin del análisis/no hay incongruencias.");
+    console.log("INFO : ACEPTANDO registro del CSV");
+      return true;
+  }
+
+  }catch(err){}
+    console.log("WARN : Se detectan Incongruencias en el archivo");
+    console.log("INFO : DESCARTANDO registro del CSV");
     return false;   
 }
 
@@ -146,27 +182,27 @@ function bonificar(){
     if((empleados[i].cargo=="D")  && (empleados[i].meses>=18)){
       empleados[i].salario+=(empleados[i].salario*0.2);
     }
-    if((empleados[i].cargo=="M") && (empleados[i].meses>=18)){
+    else if((empleados[i].cargo=="M") && (empleados[i].meses>=18)){
       empleados[i].salario+=(empleados[i].salario*0.15);
     }
-    if((empleados[i].cargo=="N") && (empleados[i].meses>=18)){
+    else if((empleados[i].cargo=="N") && (empleados[i].meses>=18)){
       empleados[i].salario+=(empleados[i].salario*0.10);
     }
-    if((empleados[i].cargo=="D")  && (empleados[i].meses<18)){
+    else if((empleados[i].cargo=="D")  && (empleados[i].meses<18)){
       empleados[i].salario+=(empleados[i].salario*0.12);
     }
-    if((empleados[i].cargo=="M")  && (empleados[i].meses<18)){
+    else if((empleados[i].cargo=="M")  && (empleados[i].meses<18)){
       empleados[i].salario+=(empleados[i].salario*0.08);
     }
-    if((empleados[i].cargo=="N")  && (empleados[i].meses<18)){
+    else if((empleados[i].cargo=="N")  && (empleados[i].meses<18)){
       empleados[i].salario+=(empleados[i].salario*0.04);
     }  
     console.log(empleados[i]); 
   }   
 }
 
-function queryinsertarEmpleados(){
-
+function queryinsertarEmpleados(i){
+  try{
   pool.query('insert into empleados (id,nombre,apellido,meses,cargo,salario) values ($1, $2, $3, $4, $5, $6 )',
           [empleados[i].id,
           empleados[i].nombre,
@@ -176,21 +212,19 @@ function queryinsertarEmpleados(){
           empleados[i].salario
           ], (error, results) => {
             if (error) {
-              throw error
+              //throw error
+              console.log("WARN : Ya existe Registro con el ID propuesto.")
             }
       })
-
+    }catch(err){}
 }
 
 function insertarEmpleados(){
-  var good=true;
 
   for(var i=0; i<empleados.length; i++){
 
-
     pool.query('SELECT Id FROM empleados', (error, results) => {
       if (error) {
-        good=false;
         throw error
       }
 
@@ -199,17 +233,12 @@ function insertarEmpleados(){
         try{
         if(empleados[i].id == results.rows[j]){
           console.log(empleados[i].id);
-        }}catch(err){
-          good=false;
-        }
+        }}catch(err){}
       }
       console.log("ID EXISTENTES:");
       console.log(results.rows);
     })
-
-    if(good){
-      queryinsertarEmpleados();
-    }
+    queryinsertarEmpleados(i);
       /*
       */
   }  
@@ -238,7 +267,7 @@ function insertarEmpleados(){
       if (error) {
         throw error
       }
-      response.status(201).json({ UsuarioAgregado: 'Ok' })
+      response.status(201).json({ EmpleadoAgregado: 'Ok' })
     })
   }
   

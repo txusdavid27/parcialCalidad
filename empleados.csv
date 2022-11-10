@@ -1,5 +1,10 @@
 Id;Nombres;Apellidos;Meses_labor;Cargo;Salario
-10;Carlos;Zapata;9;D;12500000
-11;Javier;Martinez;22;M;6700000
-12;Jesus;Traslavina;12;N;1200000
-13;Andru;Roncancio;48;D;50000000
+10;Carlos;Zapata;9;D;-12500000
+11;Javier;Martinez;22;a;6700000
+15;Samuel;Moreno;as;N;500000
+ALasdad;Samuel;Moreno;as;N;500000
+-20;Samuel;Moreno;10;N;500000
+20;Samuel;Moreno;-10;N;500000
+jesus;Javier;Martinez;22;D;6700000
+77;1234;Martinez;22;D;500000
+10;Carlos;1234;9;D;12500000
